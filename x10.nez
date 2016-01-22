@@ -11,21 +11,38 @@ LINECOMMENT               = '//' ( ![\r\n] . )*
 W                         = [a-zA-Z_0-9]
 
 /* Declarations */
-PackageDeclaration        = { 'package P;' #Stub }
-ImportDeclarations        = { 'import I;' #Stub }
+PackageDeclaration        = { ( $(Annotations) _ )? "package" _ $(PackageName) #PackageDeclaration }
+PackageName               = Id {$ _ "." _ Id #PackageName }*
+Id                        = Identifier
 
-TypeDeclarations          = { 'class X{}' #Stub }
-ClassDeclaration          = { 'class X{}' #Stub }
-StructDeclaration         = { 'struct X{}' #Stub }
-InterfaceDeclaration      = { 'interface X{}' #Stub }
-TypeDefDeclaration        = { 'type ID = int;' #Stub }
+ImportDeclarations        = { $(ImportDeclaration) ( _ $(ImportDeclaration) )* #ImportDeclarations }
+ImportDeclaration         = { $(SingleTypeImportDeclaration) #ImportDeclaration }
+                          / { $(TypeImportOnDemandDeclaration) #ImportDeclaration }
+SingleTypeImportDeclaration  = { "import" _ $(TypeName) #SingleTypeImportDeclaration }
+TypeDeclarations          = { $(TypeDeclaration) ( _ $(TypeDeclaration) )* #TypeDeclaration }
+TypeDeclaration           = { $(ClassDeclaration) #TypeDeclaration}
+                          / { $(StructDeclaration) #TypeDeclaration}
+                          / { $(InterfaceDeclaration) #TypeDeclaration}
+                          / { $(TypeDefDeclaration) #TypeDeclaration}
+                          / { ';' #TypeDefDeclaration }
+ClassDeclaration          = { ( $(Mods) _ )? "class" _ $(Id) ( _ $(TypeParametersI) )? ( _ $(Properties) )? ( _ $(Guard) )? ( _ $(Super) )? ( _ $(interfaces) )? _ $(ClassBody) #ClassDeclaration }
+StructDeclaration         = { ( $(Mods) _ )? "struct" _ $(Id) ( _ $(TypeParametersI) )? ( _ $(Properties) )? ( _ $(Guard) )? ( _ $(interfaces) )? _ $(ClassBody) #StructDeclaration }
+InterfaceDeclaration      = { ( $(Mods) _ )? "interface" _ $(Id) ( _ $(TypeParametersI) )? ( _ $(Properties) )? ( _ $(Guard) )? ( _ $(ExtendsInterfaces) )? _ $(InterfaceBody) #InterfaceDeclaration }
+TypeDefDeclaration        = { ( $(Mods) _ )? "type" _ $(Id) ( _ $(TypeParameters) )? ( _ $(Guard) )? _ "=" _ $(Type) #TypeDefDeclaration }
+                          / { ( $(Mods) _ )? "type" _ $(Id) ( _ $(TypeParameters) )? _ "(" _ $(FormalList) _ ")" ( _ $(Guard) )? _ $(Type) #TypeDefDeclaration }
+MethodDeclaration         = { $(MethMods) _ "def" _ $(Id) ( _ $(TypeParameters) )? _ $(Formals) ( _ $(Guard) )? ( _ $(Throws) )? ( _ $(HasResultType) )? _ $(MethodBody) #MethodDeclaration }
+                          / { $(BinOpDeclaration) #MethodDeclaration }
+                          / { $(PrefixOpDeclatation) #MethodDeclaration }
+                          / { $(ApplyOpDeclaration) #MethodDeclaration }
+                          / { $(SetOpDeclaration) #MethodDeclaration }
+                          / { $(ConversionOpDeclaration) #MethodDeclaration }
+ConstructorDeclaration    = { ( $(Mods) _ )? "def" _ "this" ( _ $(TypeParameters) )? ( _ $(Formals) )? ( _ $(Guard) )? ( _ $(HasResultType) )? _ $(ConstructorBody) #ConstructorDeclaration }
+PropertyMethodDeclaration = { $(MethMods) _ $(Id) ( _ $(TypeParameters) )? _ $(Formals) ( _ $(Guard) )? ( _ $(HasResultType) )? _ $(MethodBody) #PropertyMethodDeclaration }
+                          / { $(MethMods) _ $(Id) ( _ $(Guard) )? ( _ $(HasResultType) )? _ $(MethodBody) #PropertyMethodDeclaration }
 
-MethodDeclaration         = { 'def x() {}' #Stub }
-ConstructorDeclaration    = { 'def this() {}' #Stub }
-PropertyMethodDeclaration = { 'x() {}' #Stub }
-
-FieldDeclaration          = { 'x:Int;' #Stub }
-LocalVariableDeclaration  = { 'var x = 1' #Stub }
+FieldDeclaration          = { ( $(Mods) _ )? $(VarKeyword) _ $(FieldDeclaration) #FieldDeclaration }
+LocalVariableDeclaration  = { ( $(Mods) _ )? $(VarKeyword) _ $(VariableDeclarations) #LocalVariableDeclaration }
+                          / { ( $(Mods) _ )? _ $(VariableDeclarationsWType) #LocalVariableDeclaration }
 Formals                   = { '(ID : Int)' #Stub }
 LoopIndex                 = { 'li' #Stub }
 
@@ -374,4 +391,3 @@ KEYWORD                   = "abstract" / "as" / "assert" / "async" / "at"
 "!~"                      = '!~'
 "-<"                      = '-<'
 ">-"                      = '>-'
-
