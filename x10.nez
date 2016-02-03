@@ -53,10 +53,32 @@ ImprConvOpDeclaration     = { $(MethMods) _ "operator" ( _ $(TypeParameters) )? 
 ConstructorDeclaration    = { ( $(Mods) _ )? "def" _ "this" ( _ $(TypeParameters) )? ( _ $(Formals) )? ( _ $(Guard) )? ( _ $(HasResultType) )? _ $(ConstructorBody) #ConstructorDeclaration }
 PropertyMethodDeclaration = { $(MethMods) _ $(Id) ( _ $(TypeParameters) )? _ $(Formals) ( _ $(Guard) )? ( _ $(HasResultType) )? _ $(MethodBody) #PropertyMethodDeclaration }
                           / { $(MethMods) _ $(Id) ( _ $(Guard) )? ( _ $(HasResultType) )? _ $(MethodBody) #PropertyMethodDeclaration }
-
-FieldDeclaration          = { ( $(Mods) _ )? $(VarKeyword) _ $(FieldDeclaration) #FieldDeclaration }
+FieldDeclaration          = { ( $(Mods) _ )? $(VarKeyword) _ $(FieldDeclrs) _ ";" #FieldDeclaration }
+                          / { ( $(Mods) _ )? $(FieldDeclrs) _ ";" #FieldDeclaration }
+FieldDeclrs               = { $(FieldDeclr) ( _ "," _ $(FieldDeclr) )* #FieldDeclrs }
+FieldDeclr                = { $(Id) _ $(HasResultType) #FieldDeclr }
+                          / { $(Id) ( _ $(HasResultType) )? _ "=" _ $(VariableInitializer) #FieldDeclr }
+VariableInitializer       = { $(Expression) #VariableInitializer }
 LocalVariableDeclaration  = { ( $(Mods) _ )? $(VarKeyword) _ $(VariableDeclarations) #LocalVariableDeclaration }
                           / { ( $(Mods) _ )? _ $(VariableDeclarationsWType) #LocalVariableDeclaration }
+                          / { ( $(Mods) _ )? $(VarKeyword) _ $(FormalDeclarations) #LocalVariableDeclaration }
+VariableDeclarations      = { $(VariableDeclaration) ( _ "," _ $(VariableDeclaration) )* #VariableDeclarations }
+VariableDeclaration       = { $(Id) ( _ $(HasResultType) )? _ "=" _ $(VariableInitializer) #VariableDeclaration }
+                          / { "[" _ $(IdList) _ "]" ( _ $(HasResultType) )? _ "=" _ $(VariableInitializer) #VariableDeclaration }
+                          / { $(Id) _ "[" _ $(IdList) _ "]" ( _ $(HasResultType) )? _ "=" _ $(VariableInitializer) #VariableDeclaration }
+VariableDeclarationsWType = { $(VariableDeclarationWType) ( _ "," _ $(VariableDeclarationWType) )* #VariableDeclarationsWType }
+VariableDeclarationWType  = { $(Id) _ $(HasResultType) _ "=" _ $(VariableInitializer) #VariableDeclaration }
+                          / { "[" _ $(IdList) _ "]" _ $(HasResultType) _ "=" _ $(VariableInitializer) #VariableDeclaration }
+                          / { $(Id) _ "[" _ $(IdList) _ "]" _ $(HasResultType) _ "=" _ $(VariableInitializer) #VariableDeclaration }
+FormalDeclarations        = { $(FormalDeclaration) ( _ "," _ $(FormalDeclaration) )* #FormalDeclarations }
+FormalDeclaration         = { $(Id) _ $(ResultType) #FormalDeclaration }
+                          / { "[" _ $(IdList) _ "]" _ $(ResultType) #FormalDeclaration }
+                          / { $(Id) _ "[" _ $(IdList) _ "]" _ $(ResultType) #FormalDeclaration }
+LoopIndex                 = { ( $(Mods) _ )? $(LoopIndexDeclaration) #LoopIndex }
+                          / { ( $(Mods) _ )? $(VarKeyword) _ $(LoopIndexDeclaration) #LoopIndex }
+LoopIndexDeclaration      = { $(Id) ( _ $(HasResultType) )? #LoopIndexDeclaration }
+                          / { "[" _ $(IdList) _ "]" ( _ $(HasResultType) )? #LoopIndexDeclaration }
+                          / { $(Id) _ "[" _ $(IdList) _ "]" ( _ $(HasResultType) )? #LoopIndexDeclaration }
 Mods                      = { $(Mod) ( _ $(Mod) )* #Mods }
 Mod                       = Annotation
                           / "abstract" { #Abstract }
@@ -98,10 +120,11 @@ Formals                   = { "(" ( _ $(FormalList) )? _ ")" #Formals }
 Formal                    = { ( $(Mods) _ )? $(FormalDeclaration) #Formal }
                           / { ( $(Mods) _ )? $(VarKeyword) _ $(FormalDeclaration) #Formal }
                           / { $(Type) #Formal }
+VarKeyword                = "val" { #Val }
+                          / "var" { #Var }
 FormalDeclaration         = { $(Id) _ $(ResultType) #FormalDeclaration }
                           / { "[" _ $(IdList) _ "]" _ $(ResultType) #FormalDeclaration }
                           / { $(Id) _ "[" _ $(IdList) _ "]" _ $(ResultType) #FormalDeclaration }
-LoopIndex                 = { 'li' #Stub }
 Guard                     = { $(DepParams) #Guard }
 Throws                    = { "throws" _ $(ThrowList) #Throws }
 ThrowList                 = { $(Type) ( _ "," _ $(Type) )? #ThrowList }
