@@ -45,22 +45,31 @@ import ID.ID;
 import ID.ID.*;
 '''
 example TypeDeclaration '''
-class ID implements ID {}
+class ID extends Int implements Int, Int {}
 '''
 example TypeDeclaration '''
 struct ID {}
 '''
 example TypeDeclaration '''
-interface ID extends ID, ID {}
+interface ID extends Int, Int {}
 '''
 example MethodDeclaration '''
-public def ID(ID : Int) : int {}
+public def ID(ID : Int) : Int {}
 '''
 example MethodDeclaration '''
 public operator !(ID : Int) {}
 '''
 example PropertyMethodDeclaration '''
 property ID(ID : Int) = exp;
+'''
+example ConstructorDeclaration '''
+def this(ID : Int) {}
+'''
+example ConstructorDeclaration '''
+def this(ID : Int) = this();
+'''
+example ConstructorDeclaration '''
+def this(ID : Int) = exp.super();
 '''
 example FieldDeclaration '''
 private var ID : Int = exp;
@@ -83,8 +92,8 @@ NamedType                 = { 'Int' #Stub }
 DepParams                 = { '{exp}' #Stub }
 
 ClassType                 = { 'Int' #Stub }
-InterfaceTypeList         = { 'Int' #Stub }
-ThrowsList                = { 'Int' #Stub }
+InterfaceTypeList         = { 'Int, Int' #Stub }
+ThrowsList                = { 'Int, Int' #Stub }
 
 TypeName                  = { 'Int' #Stub }
 
