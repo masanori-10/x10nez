@@ -198,6 +198,15 @@ public operator !(ID : Int) {}
 example PropertyMethodDeclaration '''
 property ID(ID : Int) = exp;
 '''
+example ConstructorDeclaration '''
+def this(ID : Int) {}
+'''
+example ConstructorDeclaration '''
+def this(ID : Int) = this();
+'''
+example ConstructorDeclaration '''
+def this(ID : Int) = exp.super();
+'''
 example FieldDeclaration '''
 private var ID : Int = exp;
 '''
