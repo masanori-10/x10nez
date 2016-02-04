@@ -18,7 +18,7 @@ IdList                    = { $(Id) ( _ "." _ $(Id) )* #IdList }
 ImportDeclarations        = { $(ImportDeclaration) ( _ $(ImportDeclaration) )* #ImportDeclarations }
 ImportDeclaration         = { $(SingleTypeImportDecln) #ImportDeclaration }
                           / { $(TypeImportOnDemandDecln) #ImportDeclaration }
-SingleTypeImportDecln     = { "import" _ $(TypeName) #SingleTypeImportDecln }
+SingleTypeImportDecln     = { "import" _ $(TypeName) _ ";" #SingleTypeImportDecln }
 TypeImportOnDemandDecln   = { "import" _ $(PackageOrTypeName) _ "." _ "*" _ ";" #TypeImportOnDemandDecln }
 PackageOrTypeName         = Id {$ _ "." _ $(Id) #PackageOrTypeName }*
 TypeDeclarations          = { $(TypeDeclaration) ( _ $(TypeDeclaration) )* #TypeDeclaration }
@@ -38,11 +38,11 @@ MethodDeclaration         = { $(MethMods) _ "def" _ $(Id) ( _ $(TypeParameters) 
                           / { $(ApplyOpDeclaration) #MethodDeclaration }
                           / { $(SetOpDeclaration) #MethodDeclaration }
                           / { $(ConversionOpDeclaration) #MethodDeclaration }
-BinOpDeclaration          = { $(MethMods) _ "operator" ( _ $(TypeParameters) )? _ "(" _ $(Formal) _ ")" _ binOp _ "(" _ $(Formal) _ ")" ( _ $(Guard) )? ( _ $(HasResultType) )? _ $(MethodBody) #BinOpDeclaration }
-                          / { $(MethMods) _ "operator" ( _ $(TypeParameters) )? _ "this" _ binOp _ "(" _ $(Formal) _ ")" ( _ $(Guard) )? ( _ $(HasResultType) )? _ $(MethodBody) #BinOpDeclaration }
-                          / { $(MethMods) _ "operator" ( _ $(TypeParameters) )? _ "(" _ $(Formal) _ ")" _ binOp _ "this" ( _ $(Guard) )? ( _ $(HasResultType) )? _ $(MethodBody) #BinOpDeclaration }
-PrefixOpDeclatation       = { $(MethMods) _ "operator" ( _ $(TypeParameters) )? _ prefixOp _ "(" _ $(Formal) _ ")" ( _ $(Guard) )? ( _ $(HasResultType) )? _ $(MethodBody) #PrefixOpDeclatation }
-                          / { $(MethMods) _ "operator" ( _ $(TypeParameters) )? _ prefixOp _ "this" ( _ $(Guard) )? ( _ $(HasResultType) )? _ $(MethodBody) #PrefixOpDeclatation }
+BinOpDeclaration          = { $(MethMods) _ "operator" ( _ $(TypeParameters) )? _ "(" _ $(Formal) _ ")" _ $(BinOp) _ "(" _ $(Formal) _ ")" ( _ $(Guard) )? ( _ $(HasResultType) )? _ $(MethodBody) #BinOpDeclaration }
+                          / { $(MethMods) _ "operator" ( _ $(TypeParameters) )? _ "this" _ $(BinOp) _ "(" _ $(Formal) _ ")" ( _ $(Guard) )? ( _ $(HasResultType) )? _ $(MethodBody) #BinOpDeclaration }
+                          / { $(MethMods) _ "operator" ( _ $(TypeParameters) )? _ "(" _ $(Formal) _ ")" _ $(BinOp) _ "this" ( _ $(Guard) )? ( _ $(HasResultType) )? _ $(MethodBody) #BinOpDeclaration }
+PrefixOpDeclatation       = { $(MethMods) _ "operator" ( _ $(TypeParameters) )? _ $(PrefixOp) _ "(" _ $(Formal) _ ")" ( _ $(Guard) )? ( _ $(HasResultType) )? _ $(MethodBody) #PrefixOpDeclatation }
+                          / { $(MethMods) _ "operator" ( _ $(TypeParameters) )? _ $(PrefixOp) _ "this" ( _ $(Guard) )? ( _ $(HasResultType) )? _ $(MethodBody) #PrefixOpDeclatation }
 ApplyOpDeclaration        = { $(MethMods) _ "operator" _ "this" ( _ $(TypeParameters) )? _ $(Formals) ( _ $(Guard) )? ( _ $(HasResultType) )? _ $(MethodBody) #ApplyOpDeclaration }
 SetOpDeclaration          = { $(MethMods) _ "operator" _ "this" ( _ $(TypeParameters) )? _ $(Formals) _ "=" _ "(" _ $(Formal) _ ")" ( _ $(Guard) )? ( _ $(HasResultType) )? _ $(MethodBody) #SetOpDeclaration }
 ConversionOpDeclaration   = { $(ExplConvOpDeclaration) #ConversionOpDeclaration }
@@ -56,8 +56,9 @@ PropertyMethodDeclaration = { $(MethMods) _ $(Id) ( _ $(TypeParameters) )? _ $(F
 FieldDeclaration          = { ( $(Mods) _ )? $(VarKeyword) _ $(FieldDeclrs) _ ";" #FieldDeclaration }
                           / { ( $(Mods) _ )? $(FieldDeclrs) _ ";" #FieldDeclaration }
 FieldDeclrs               = { $(FieldDeclr) ( _ "," _ $(FieldDeclr) )* #FieldDeclrs }
-FieldDeclr                = { $(Id) _ $(HasResultType) #FieldDeclr }
-                          / { $(Id) ( _ $(HasResultType) )? _ "=" _ $(VariableInitializer) #FieldDeclr }
+FieldDeclr                = { $(Id) ( _ $(HasResultType) )? _ "=" _ $(VariableInitializer) #FieldDeclr }
+                          / { $(Id) _ $(HasResultType) #FieldDeclr }
+
 VariableInitializer       = { $(Expression) #VariableInitializer }
 LocalVariableDeclaration  = { ( $(Mods) _ )? $(VarKeyword) _ $(VariableDeclarations) #LocalVariableDeclaration }
                           / { ( $(Mods) _ )? _ $(VariableDeclarationsWType) #LocalVariableDeclaration }
@@ -91,7 +92,7 @@ Mod                       = Annotation
                           / "static" { #Static }
                           / "transient" { #Transient }
                           / "clocked" { #Clocked }
-MethMods                  = ( Mods / "property" { #Property } / Mod ) {$ _ ( "property" / $(Mod) ) #MethMods }
+MethMods                  = ( Mods / "property" { #Property } / Mod ) {$ _ ( "property" / $(Mod) ) #MethMods }*
 Properties                = { "(" _ $(PropList) _ ")" #Properties }
 PropList                  = { $(Prop) ( _ "," _ $(Prop) )* #PropList }
 Prop                      = { ( $(Annotations) _ )? $(Id) _ $(ResultType) #Prop }
@@ -107,6 +108,9 @@ ConstructorBody           = { $(ConstructorBlock) #ConstructorBody }
                           / ";" { #ConstructorBody }
 ConstructorBlock          = { "{" ( _ $(ExplicitCtorInvo) )? ( _ _BlockStatements )? _ "}" #ConstructorBlock }
 ExplicitCtorInvo          = { "this" ( _ $(TypeArguments) )? _ "(" ( _ $(ArgumentList) )? _ ")" _ ";" #ExplicitCtorInvo }
+                          / { "super" ( _ $(TypeArguments) )? _ "(" ( _ $(ArgumentList) )? _ ")" _ ";" #ExplicitCtorInvo }
+                          / { $(PrimaryExpression) _ "." _ "this" ( _ $(TypeArguments) )? _ "(" ( _ $(ArgumentList) )? _ ")" _ ";" #ExplicitCtorInvo }
+                          / { $(PrimaryExpression) _ "." _ "super" ( _ $(TypeArguments) )? _ "(" ( _ $(ArgumentList) )? _ ")" _ ";" #ExplicitCtorInvo }
 AssignPropCall            = { "property" ( _ $(TypeArguments) )? _ "(" ( _ $(ArgumentList) )? _ ")" _ ";" #AssignPropCall }
 ExtendsInterfaces         = "extends" _ Type {$ _ "," _ $(Type) #ExtendsInterfaces }
 InterfaceBody             = { "{" ( _ $(InterfaceMemberDeclns) )? _ "}" #InterfaceBody }
@@ -134,7 +138,8 @@ MethodBody                = { "=" _ $(LastExp) _ ";" #MethodBody }
                           / { ( $(Annotations) _ )? $(Block) #MethodBody }
                           / { ";" #MethodBody }
 LastExp                   = { $(Expression) #LastExp }
-binOp                     = "+"
+BinOp                     = { (
+                          "+"
                           / "-"
                           / "*"
                           / "/"
@@ -162,7 +167,9 @@ binOp                     = "+"
                           / "~"
                           / "!~"
                           / "!"
-prefixOp                  = "+"
+                          ) #BinOp }
+PrefixOp                  = { (
+                          "+"
                           / "-"
                           / "!"
                           / "~"
@@ -172,12 +179,13 @@ prefixOp                  = "+"
                           / "*"
                           / "/"
                           / "%"
+                          ) #PrefixOp }
 
 example PackageDeclaration '''
 package ID.ID;
 '''
 example ImportDeclarations '''
-import ID.ID;
+import Int;
 import ID.ID.*;
 '''
 example TypeDeclaration '''
@@ -549,3 +557,4 @@ KEYWORD                   = "abstract" / "as" / "assert" / "async" / "at"
 "!~"                      = '!~'
 "-<"                      = '-<'
 ">-"                      = '>-'
+"<-"                      = '<-'
